@@ -26,8 +26,8 @@ agape-pwa/
 ```
 
 ## Credenciais padrão
-- Login: admin
-- Senha: agape2024
+- Login: *****
+- Senha: *****
 
 ## Notificações
 As notificações funcionam quando o app está instalado na tela inicial.
