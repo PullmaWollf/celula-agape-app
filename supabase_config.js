@@ -8,8 +8,8 @@
 // 3. Vá em Settings > API
 // 4. Copie a "Project URL" e a "anon public" key
 
-const SUPABASE_URL = 'COLE_SUA_URL_AQUI';        // ex: https://xyzxyz.supabase.co
-const SUPABASE_ANON_KEY = 'COLE_SUA_ANON_KEY_AQUI'; // começa com "eyJ..."
+const SUPABASE_URL = 'https://clvibzknsctfifrvepvq.supabase.co';        // ex: https://xyzxyz.supabase.co
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsdmliemtuc2N0ZmlmcnZlcHZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5NzEwMzUsImV4cCI6MjA5MDU0NzAzNX0.4ITssYLA0exbGjP5kAKq69Ko6XonaTWX34VIcO5bhtQ'; // começa com "eyJ..."
 
 // VAPID Public Key para Web Push Notifications
 // Gere em: https://web-push-codelab.glitch.me/
