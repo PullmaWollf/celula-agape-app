@@ -855,9 +855,9 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // Detectar se Supabase está configurado
 const SUPABASE_CONFIGURED = true;
 
-let supabase = null;
+let supabaseClient = null;
 if (SUPABASE_CONFIGURED) {
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
 /* ════ STATE ════ */
@@ -889,7 +889,7 @@ async function dbLoad() {
     renderAll();
   }, 8000);
 
-  if (!supabase) {
+  if (!supabaseClient) {
     console.log('Supabase não configurado, usando modo local.');
     setDbStatus(false, 'local');
     clearTimeout(timeout);
@@ -899,15 +899,15 @@ async function dbLoad() {
   }
   try {
     // Carregar usuários
-    const { data: users, error: eu } = await supabase.from('usuarios').select('*').order('nome');
+    const { data: users, error: eu } = await supabaseClient.from('usuarios').select('*').order('nome');
     if (!eu && users) S.users = users;
 
     // Carregar posts
-    const { data: posts, error: ep } = await supabase.from('posts').select('*').order('criado_em', { ascending: false });
+    const { data: posts, error: ep } = await supabaseClient.from('posts').select('*').order('criado_em', { ascending: false });
     if (!ep && posts) S.posts = posts;
 
     // Carregar escala com membros
-    const { data: escala, error: ee } = await supabase.from('escala_completa').select('*');
+    const { data: escala, error: ee } = await supabaseClient.from('escala_completa').select('*');
     if (!ee && escala) {
       S.escala = escala.map(e => ({
         ...e,
@@ -957,35 +957,35 @@ function renderAll() {
 }
 
 function setupRealtimeSubscriptions() {
-  if (!supabase) return;
+  if (!supabaseClient) return;
 
   // Posts em tempo real
-  supabase.channel('posts-changes')
+  supabaseClient.channel('posts-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, async () => {
-      const { data } = await supabase.from('posts').select('*').order('criado_em', { ascending: false });
+      const { data } = await supabaseClient.from('posts').select('*').order('criado_em', { ascending: false });
       if (data) { S.posts = data; renderPosts(); renderAdmPosts(); }
     })
     .subscribe();
 
   // Escala em tempo real
-  supabase.channel('escala-changes')
+  supabaseClient.channel('escala-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'escala' }, async () => {
       await reloadEscala();
     })
     .subscribe();
 
   // Usuários em tempo real
-  supabase.channel('users-changes')
+  supabaseClient.channel('users-changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, async () => {
-      const { data } = await supabase.from('usuarios').select('*').order('nome');
+      const { data } = await supabaseClient.from('usuarios').select('*').order('nome');
       if (data) { S.users = data; renderUsers(); renderMemberPicker(); }
     })
     .subscribe();
 }
 
 async function reloadEscala() {
-  if (!supabase) return;
-  const { data } = await supabase.from('escala_completa').select('*');
+  if (!supabaseClient) return;
+  const { data } = await supabaseClient.from('escala_completa').select('*');
   if (data) {
     S.escala = data.map(e => ({
       ...e,
@@ -1228,8 +1228,8 @@ async function addPost() {
     autor_nome: S.me.nome,
     criado_em: new Date().toISOString()
   };
-  if (supabase && S.dbOnline) {
-    const { data, error } = await supabase.from('posts').insert(newPost).select().single();
+  if (supabaseClient && S.dbOnline) {
+    const { data, error } = await supabaseClient.from('posts').insert(newPost).select().single();
     if (error) { toast('Erro ao publicar. Tente novamente.','err'); return; }
     // Realtime vai atualizar automaticamente
   } else {
@@ -1243,8 +1243,8 @@ async function addPost() {
 
 async function deletePost(id) {
   if(!confirm('Excluir este post?'))return;
-  if (supabase && S.dbOnline) {
-    const { error } = await supabase.from('posts').delete().eq('id', id);
+  if (supabaseClient && S.dbOnline) {
+    const { error } = await supabaseClient.from('posts').delete().eq('id', id);
     if (error) { toast('Erro ao excluir.','err'); return; }
     // Realtime vai atualizar automaticamente
   } else {
@@ -1362,19 +1362,19 @@ async function addEscala() {
     };
   }
 
-  if (supabase && S.dbOnline) {
+  if (supabaseClient && S.dbOnline) {
     // Inserir no Supabase
-    const { data: escalaData, error: escalaErr } = await supabase
+    const { data: escalaData, error: escalaErr } = await supabaseClient
       .from('escala').insert({ data_celula: d }).select().single();
     if (escalaErr) { toast('Erro ao salvar escala.','err'); return; }
 
     // Inserir membros
     const membrosInsert = members.map(m => ({ escala_id: escalaData.id, usuario_id: m.id }));
-    await supabase.from('escala_membros').insert(membrosInsert);
+    await supabaseClient.from('escala_membros').insert(membrosInsert);
 
     // Inserir alarme se configurado
     if (alarm) {
-      await supabase.from('escala_alarmes').insert({
+      await supabaseClient.from('escala_alarmes').insert({
         escala_id: escalaData.id,
         ts: alarm.ts,
         extra_1d: alarm.extra1d,
@@ -1423,8 +1423,8 @@ async function deleteEscala(id) {
   const item=S.escala.find(e=>String(e.id)===String(id));
   if(item) cancelAlarms(item);
 
-  if (supabase && S.dbOnline) {
-    await supabase.from('escala').delete().eq('id', id);
+  if (supabaseClient && S.dbOnline) {
+    await supabaseClient.from('escala').delete().eq('id', id);
     await reloadEscala();
   } else {
     S.escala=S.escala.filter(e=>String(e.id)!==String(id));
@@ -1471,9 +1471,9 @@ async function saveAlarmEdit() {
     extra30m: document.getElementById('alarm-edit-30m').checked
   };
 
-  if (supabase && S.dbOnline) {
+  if (supabaseClient && S.dbOnline) {
     // Upsert alarme
-    await supabase.from('escala_alarmes').upsert({
+    await supabaseClient.from('escala_alarmes').upsert({
       escala_id: id,
       ts: alarmData.ts,
       extra_1d: alarmData.extra1d,
@@ -1499,8 +1499,8 @@ async function removeAlarm() {
   if(!e)return;
   cancelAlarms(e);
 
-  if (supabase && S.dbOnline) {
-    await supabase.from('escala_alarmes').delete().eq('escala_id', id);
+  if (supabaseClient && S.dbOnline) {
+    await supabaseClient.from('escala_alarmes').delete().eq('escala_id', id);
     await reloadEscala();
   } else {
     e.alarm=null;
@@ -1534,8 +1534,8 @@ async function addUser() {
 
   const newUser = { nome, login, senha_hash: pass, role };
 
-  if (supabase && S.dbOnline) {
-    const { error } = await supabase.from('usuarios').insert(newUser);
+  if (supabaseClient && S.dbOnline) {
+    const { error } = await supabaseClient.from('usuarios').insert(newUser);
     if (error) { toast('Erro ao adicionar usuário.','err'); return; }
     // Realtime vai atualizar
   } else {
@@ -1555,8 +1555,8 @@ async function deleteUser(id) {
   }
   if(!confirm('Remover este usuário?'))return;
 
-  if (supabase && S.dbOnline) {
-    const { error } = await supabase.from('usuarios').delete().eq('id', id);
+  if (supabaseClient && S.dbOnline) {
+    const { error } = await supabaseClient.from('usuarios').delete().eq('id', id);
     if (error) { toast('Erro ao remover usuário.','err'); return; }
     // Realtime vai atualizar
   } else {
