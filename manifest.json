@@ -24,7 +24,7 @@
       "name": "Mural",
       "short_name": "Mural",
       "description": "Ver o mural da célula",
-      "url": "/?page=mural",
+      "url": "/",
       "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
     },
     {
@@ -32,6 +32,13 @@
       "short_name": "Escala",
       "description": "Ver a escala de lanche",
       "url": "/?page=escala",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Localização",
+      "short_name": "Local",
+      "description": "Onde nos reunimos",
+      "url": "/?page=local",
       "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
     }
   ]
